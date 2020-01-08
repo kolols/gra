@@ -1,0 +1,196 @@
+#include <iostream>
+#include <windows.h>
+#include <cstdlib>
+#include <vector>
+void color_standrad(){
+    HANDLE color;
+    color = GetStdHandle( STD_OUTPUT_HANDLE );
+    SetConsoleTextAttribute( color, 7);
+}
+void color(int player [5][5], int j, int i){
+    HANDLE color;
+    color = GetStdHandle( STD_OUTPUT_HANDLE );
+
+        if(player[j][i]==1){
+            SetConsoleTextAttribute( color, FOREGROUND_RED);
+        }else if(player[j][i]==2){
+        SetConsoleTextAttribute( color, FOREGROUND_GREEN);
+        }
+
+}
+void draw_horizontal(int b){    // przyjmuje size_map(a z draw_map) (poziom)
+    std::cout<<"      ";
+    for(int i=0; i<b*4; i++){
+        std::cout<<"-";
+    }
+    std::cout<<std::endl;
+}
+void draw_upmove(int b){
+    std::cout<<"      ";
+    for(int i=0; i<b; i++){
+        std::cout<<" "<<i+1<<"  ";
+    }
+    std::cout<<std::endl;
+
+}
+void draw_vertical(int size_map, int j, int wartosc[5][5], int player [5][5]){          // (pion) przyjmuje (a z draw_map)
+
+    for(int i=0; i<size_map; i++){
+        std::cout<<"|"<<" ";
+        color(player, j, i);
+        std::cout<<wartosc[j][i]<<" ";
+        color_standrad();
+    }
+    std::cout<<"|"<<std::endl;
+}
+void draw_map(int size_map, int wartosc[5][5], int player[5][5]){
+    draw_upmove(size_map);
+    for(int j=0; j<size_map; j++){
+        draw_horizontal(size_map);
+        std::cout<<" "<<j+1<<"   ";
+        draw_vertical(size_map, j, wartosc, player);
+    }
+    draw_horizontal(size_map);
+}
+void dodawanie_wartosci(int wartosc[5][5],int pion, int poziom, int gracz, int player[5][5]){
+wartosc[pion][poziom]-=4;
+if(pion-1>=0){                          // czy mieszcza się tablicy
+    wartosc[pion-1][poziom]++;
+    player[pion-1][poziom]=gracz;
+}
+if(poziom-1>=0){
+    wartosc[pion][poziom-1]++;
+    player[pion][poziom-1]=gracz;
+}
+if(pion+1<5){
+    wartosc[pion+1][poziom]++;
+    player[pion+1][poziom]=gracz;
+}
+if(poziom+1<5){
+    wartosc[pion][poziom+1]++;
+    player[pion][poziom+1]=gracz;
+}
+
+}
+
+void logic(int wartosc[5][5], int pion, int poziom, int size_map, int gracz, int player[5][5]){
+    bool brak=true;
+wartosc[pion][poziom]++;
+player[pion][poziom]=gracz;
+while(brak==true){
+        brak=false;
+    for(int i=0; i<size_map; i++){
+        for(int j=0; j<size_map; j++){
+            if(wartosc[i][j]>=4)                     // przy 4 punktach wybuch
+            {
+                brak=true;
+                pion=i;
+                poziom=j;
+                dodawanie_wartosci(wartosc, pion, poziom, gracz, player);
+
+            }
+        }
+    }
+}
+}
+bool check_move(int player[5][5], int pion, int poziom, int gracz){
+    bool corect=true;
+    if(pion>5 || pion<1 || poziom>5 || pion<1){                       //sprawdza czy z odpowiedzniego zakresu
+        std::cout<<"pole już zajęte poza planszom"<<std::endl;
+        corect=false;
+    }else{
+    pion--;
+    poziom--;
+    if(gracz==1){    // dla gracza1
+        if(player[pion][poziom]==2){
+            std::cout<<"pole już zajęte"<<std::endl;
+            corect=false;
+        }
+    }else         // dla gracz2
+    if(gracz==2){
+        if(player[pion][poziom]==1){
+            std::cout<<"pole już zajęte"<<std::endl;
+            corect=false;
+        }
+    }
+    }
+    return corect;
+}
+bool check_win(int player[5][5], int gracz){ //spr po wykonaniu ruchu
+    bool zw=true;
+    for(int k=0; k<5; k++){
+        for(int j=0; j<5; j++){
+            if(player[k][j]!=0 && player[k][j]!=gracz){
+                zw=false;
+                break;
+            }
+
+        }
+    }
+return zw;
+}
+
+
+int main()
+{
+    char p ,d;
+    bool ruch=true;
+    int size_map=5, pion, poziom, gracz=1, tura=0;       //1 - gracz1  2 - gracz2
+    int player[size_map][size_map]={0};             // 0- pole niczyje 1- pole gracza1 2- pole gracza2
+    int wartosc[size_map][size_map]={0};
+    /*player[1][2]=1;
+    player[4][3]=2;
+    player[0][1]=1;
+    player[3][3]=2;
+    player[1][4]=2;
+    for(int i=0; i<5-1; i++){
+        for(int j=0; j<5-1; j++){
+            wartosc[i][j]=j;
+        }
+    }
+    wartosc[2][3]=2;
+    wartosc[3][3]=0; */
+    while(1){
+            ruch = true;
+        std::cout<<"Podaj gdzie dodac punkt graczu "<<gracz<<std::endl;
+        while(ruch==true){
+            ruch=false;
+            std::cin>>pion;
+            if(std::cin.fail()==true){
+                std::cin.clear();
+                std::cin.ignore();
+                ruch =true;
+                std::cout<<"nie podano liczby"<<std::endl;
+            }
+            std::cin>>poziom;
+              if(std::cin.fail()==true){
+                    std::cin.clear();
+                    std::cin.ignore();
+                ruch =true;
+                std::cout<<"nie podano liczby"<<std::endl;
+            }
+            if(check_move(player, pion, poziom, gracz)==false){
+
+                ruch =true;
+                std::cout<<"podano zle kordy, podaj dobre"<<std::endl;
+                }
+        }
+    system("cls");
+    pion--;
+    poziom--;
+    logic(wartosc, pion, poziom, size_map, gracz, player);
+    draw_map(size_map, wartosc, player);
+    if(check_win(player, gracz)==true && tura>0){
+        std::cout<<"Wygrał gracz nr: "<<gracz<<" Gratulacje!!!"<<std::endl;
+        break;
+    }
+    if(gracz==1){
+        gracz=2;
+    }else if(gracz==2){
+         gracz=1;
+         }
+    tura++;
+    }
+
+    return 0;
+}
